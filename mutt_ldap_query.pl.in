@@ -66,7 +66,7 @@ our $ldap_tls_capath = '';
 our $ldap_tls_cafile = '';
 # LDAP TLS sslserver
 our $ldap_tls_sslserver = '';
-# LDAP STARTTLS
+# LDAP START TLS
 our $ldap_start_tls = 0;
 # LDAP SASL mechanism
 our $ldap_sasl_mech = '';
@@ -127,7 +127,7 @@ GetOptions (
   'capath:s'                    => \$ldap_tls_capath,
   'cafile:s'                    => \$ldap_tls_cafile,
   'sslserver:s'                 => \$ldap_tls_sslserver,
-  'starttls:s'                  => \$ldap_starttls,
+  'start_tls:s'                 => \$ldap_start_tls,
   'sasl_mech|sm:s'              => \$ldap_sasl_mech,
   'debug'			=> sub { $DEBUG = 1 },
   'help|?|h'			=> \$help,
@@ -193,7 +193,7 @@ if ($ldap_server_nickname) {
      $ldap_tls_sslserver = $option_array->[14];
   }
   if (defined($option_array->[15])) {
-     $ldap_starttls = $option_array->[15];
+     $ldap_start_tls = $option_array->[15];
   }
   if (defined($option_array->[16])) {
      $ldap_sasl_mech = $option_array->[16];
@@ -240,7 +240,7 @@ foreach my $askfor ( @ARGV ) {
   } else {
     $ldap = Net::LDAP->new($ldap_server, Debug => 3) or die $@;
   }
-  if (defined($ldap_starttls) && $ldap_starttls) {
+  if (defined($ldap_start_tls) && $ldap_start_tls) {
     my $mesg = $ldap->start_tls();
     die $mesg->error if $mesg->is_error;
   }
@@ -431,7 +431,7 @@ If not given it defaults to the name of the HOST connected to.
 
 See L<IO::Socket::SSL/SSL_verifycn_name> for more details.
 
-=item B<--starttls=1> or B<--starttls=0>
+=item B<--start_tls=1> or B<--start_tls=0>
 
 calling this method will convert the existing connection (LDAP) to
 using Transport Layer Security (TLS), which provides an encrypted
