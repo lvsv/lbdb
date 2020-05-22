@@ -381,9 +381,7 @@ Leave it empty for an anonmyous bind.
 
 enable or disable transport layer security (LDAPS).
 
-=over 4
-
-=item verify =E<gt> 'none' | 'optional' | 'require'
+=item B<--verify=none|optional|require>
 
 How to verify the server's certificate:
 
@@ -402,12 +400,15 @@ Verify only when the server offers a certificate
 
 The server must provide a certificate, and it must be valid.
 
+
 If you set verify to optional or require, you must also set either
 cafile or capath. The most secure option is B<require>.
 
-=item capath =E<gt> '/path/to/servercerts/'
+=back
 
-=item cafile =E<gt> '/path/to/servercert.pem'
+=item B<--capath=/path/to/servercerts/>
+
+=item B<--cafile=/path/to/servercert.pem>
 
 When verifying the server's certificate, either set capath to the
 pathname of the directory containing CA certificates, or set cafile to
@@ -422,7 +423,7 @@ names, use OpenSSL like this in Unix:
 
 (assuming that the certificate of the CA is in cacert.pem.)
 
-=item sslserver =E<gt> SSLHOST
+=item B<--sslserver=SSLHOST>
 
 Allow changing the server name to use in certificate hostname verification
 in case the target hostname does not match the LDAP server's certificate.
