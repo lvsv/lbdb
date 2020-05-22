@@ -12,6 +12,11 @@
 #                   'LDAP_BIND_DN' (optional),
 #                   'LDAP_BIND_PASSWORD (optional),
 #                   'LDAP_TLS (optional),
+#                   'LDAP_TLS_VERIFY (optional),
+#                   'LDAP_TLS_CAPATH (optional),
+#                   'LDAP_TLS_CAFILE (optional),
+#                   'LDAP_TLS_SSLSERVER (optional),
+#                   'LDAP_STARTTLS (optional),
 #                   'LDAP_SASL_MECH (optional)],
 # (IGNORANT is an optional argument. If you set it to 1, mutt_ldap_query
 # uses wildcards *foo* for searching).
@@ -37,7 +42,7 @@
   'whowhere'	   => ['ldap.whowhere.com', 'c=US',
 		       'givenname sn cn mail', 'givenname cn sn mail o',
 		       '${mail}', '${givenname} ${sn}', '${o}' ],
-  'bigfoot'	   => ['ldap.bigfoot.com', 'c=US', 
+  'bigfoot'	   => ['ldap.bigfoot.com', 'c=US',
 		       'givenname surname cn mail', 'mail cn l',
 		       '${mail}', '${cn}', '${l}' ],
   'switchboard'	   => ['ldap.switchboard.com', 'c=US',
@@ -82,5 +87,10 @@ $ldap_bind_dn = '';
 $ldap_bind_password = '';
 # Don't use TLS:
 $ldap_tls = 0;
+$ldap_tls_verify = '';
+$ldap_tls_capath = '';
+$ldap_tls_cafile = '';
+$ldap_tls_sslserver = '';
+$ldap_starttls = 0;
 $ldap_sasl_mech = '';
 1;

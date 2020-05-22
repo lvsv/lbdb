@@ -21,6 +21,7 @@
 use strict;
 use Getopt::Long;
 use Net::LDAP;
+use Net::LDAPS;
 use Pod::Usage;
 # install libgssapi-perl libauthen-sasl-perl
 use Authen::SASL qw(Perl);
@@ -57,6 +58,16 @@ our $ldap_bind_dn = '';
 our $ldap_bind_password = '';
 # LDAP TLS
 our $ldap_tls = 0;
+# LDAP TLS verify
+our $ldap_tls_verify = '';
+# LDAP TLS capath
+our $ldap_tls_capath = '';
+# LDAP TLS cafile
+our $ldap_tls_cafile = '';
+# LDAP TLS sslserver
+our $ldap_tls_sslserver = '';
+# LDAP STARTTLS
+our $ldap_start_tls = 0;
 # LDAP SASL mechanism
 our $ldap_sasl_mech = '';
 
@@ -112,6 +123,11 @@ GetOptions (
   'bind_dn|bd:s'                => \$ldap_bind_dn,
   'bind_password|bp:s'          => \$ldap_bind_password,
   'tls:s'                       => \$ldap_tls,
+  'verify:s'                    => \$ldap_tls_verify,
+  'capath:s'                    => \$ldap_tls_capath,
+  'cafile:s'                    => \$ldap_tls_cafile,
+  'sslserver:s'                 => \$ldap_tls_sslserver,
+  'starttls:s'                  => \$ldap_starttls,
   'sasl_mech|sm:s'              => \$ldap_sasl_mech,
   'debug'			=> sub { $DEBUG = 1 },
   'help|?|h'			=> \$help,
@@ -165,7 +181,22 @@ if ($ldap_server_nickname) {
      $ldap_tls = $option_array->[10];
   }
   if (defined($option_array->[11])) {
-     $ldap_sasl_mech = $option_array->[11];
+     $ldap_tls_verify = $option_array->[11];
+  }
+  if (defined($option_array->[12])) {
+     $ldap_tls_capath = $option_array->[12];
+  }
+  if (defined($option_array->[13])) {
+     $ldap_tls_cafile = $option_array->[13];
+  }
+  if (defined($option_array->[14])) {
+     $ldap_tls_sslserver = $option_array->[14];
+  }
+  if (defined($option_array->[15])) {
+     $ldap_starttls = $option_array->[15];
+  }
+  if (defined($option_array->[16])) {
+     $ldap_sasl_mech = $option_array->[16];
   }
 }
 
@@ -178,6 +209,7 @@ my @results;
 
 foreach my $askfor ( @ARGV ) {
   my $query="";
+  my $ldap=0;
   if ($ignorant) {
 # enable this if you want to include wildcard in your search with some huge
 # ldap databases you might want to avoid it
@@ -189,8 +221,26 @@ foreach my $askfor ( @ARGV ) {
   $query = "(|" . $query . ")";
 
   print "DEBUG: perl ldap module processing filter:\nDEBUG: $query\n" if ($DEBUG);
-  my $ldap = Net::LDAP->new($ldap_server, Debug => 3) or die $@;
   if (defined($ldap_tls) && $ldap_tls) {
+    my @ldap_args = ($ldap_server);
+    push(@ldap_args, Debug => 3);
+    if (defined($ldap_tls_verify) && $ldap_tls_verify ne '') {
+        push(@ldap_args, verify => $ldap_tls_verify);
+    }
+    if (defined($ldap_tls_capath) && $ldap_tls_capath ne '') {
+        push(@ldap_args, capath => $ldap_tls_capath ne '');
+    }
+    if (defined($ldap_tls_cafile) && $ldap_tls_cafile ne '') {
+        push(@ldap_args, cafile => $ldap_tls_cafile);
+    }
+    if (defined($ldap_tls_sslserver) && $ldap_tls_sslserver ne '') {
+        push(@ldap_args, sslserver => $ldap_tls_sslserver);
+    }
+    $ldap = Net::LDAPS->new(@ldap_args) or die $@;
+  } else {
+    $ldap = Net::LDAP->new($ldap_server, Debug => 3) or die $@;
+  }
+  if (defined($ldap_starttls) && $ldap_starttls) {
     my $mesg = $ldap->start_tls();
     die $mesg->error if $mesg->is_error;
   }
@@ -329,7 +379,64 @@ Leave it empty for an anonmyous bind.
 
 =item B<--tls=1> or B<--tls=0>
 
-enable or disable transport layer security (TLS).
+enable or disable transport layer security (LDAPS).
+
+=over 4
+
+=item verify =E<gt> 'none' | 'optional' | 'require'
+
+How to verify the server's certificate:
+
+=over 4
+
+=item none
+
+The server may provide a certificate but it will not be checked - this
+may mean you are be connected to the wrong server
+
+=item optional
+
+Verify only when the server offers a certificate
+
+=item require
+
+The server must provide a certificate, and it must be valid.
+
+=back
+
+If you set verify to optional or require, you must also set either
+cafile or capath. The most secure option is B<require>.
+
+=item capath =E<gt> '/path/to/servercerts/'
+
+=item cafile =E<gt> '/path/to/servercert.pem'
+
+When verifying the server's certificate, either set capath to the
+pathname of the directory containing CA certificates, or set cafile to
+the filename containing the certificate of the CA who signed the
+server's certificate. These certificates must all be in PEM format.
+
+The directory in 'capath' must contain certificates named using the
+hash value of the certificates' subject names. To generate these
+names, use OpenSSL like this in Unix:
+
+    ln -s cacert.pem `openssl x509 -hash -noout < cacert.pem`.0
+
+(assuming that the certificate of the CA is in cacert.pem.)
+
+=item sslserver =E<gt> SSLHOST
+
+Allow changing the server name to use in certificate hostname verification
+in case the target hostname does not match the LDAP server's certificate.
+If not given it defaults to the name of the HOST connected to.
+
+See L<IO::Socket::SSL/SSL_verifycn_name> for more details.
+
+=item B<--starttls=1> or B<--starttls=0>
+
+calling this method will convert the existing connection (LDAP) to
+using Transport Layer Security (TLS), which provides an encrypted
+connection.
 
 =item B<--sasl_mech=mechanism> or B<-sm mechanism>
 
